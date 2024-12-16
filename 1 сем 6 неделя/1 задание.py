@@ -1,4 +1,4 @@
-from tkinter import *
+from tkinter import * #Задания взял у Ильдана
 
 def calc(*argc):
     try:
