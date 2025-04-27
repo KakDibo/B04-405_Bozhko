@@ -1,1 +1,0 @@
-Chto delat'
