@@ -99,6 +99,7 @@
         <p>Ваш счёт: <span id="finalScore">0</span></p>
         <p>Лучший счёт: <span id="finalBestScore">0</span></p>
         <button class="btn" onclick="restartGame()">🔄 Играть снова</button>
+        <button class="btn" onclick="closeWebApp()">🏠 Вернуться в бота</button>
     </div>
 
     <script>
@@ -177,6 +178,7 @@
             gameOverScreen.style.display = 'none';
             resetGame();
             gameRunning = true;
+            gameLoop();
         }
         
         function gameOver() {
@@ -193,13 +195,15 @@
             finalBestScoreElement.textContent = bestScore;
             gameOverScreen.style.display = 'block';
             
-            // Отправка результата в бота
-            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+            // Отправка результата в бота через Web App
+            try {
                 tg.sendData(JSON.stringify({
                     action: 'game_result',
                     score: score,
                     best_score: bestScore
                 }));
+            } catch (e) {
+                console.log('Ошибка отправки данных в бота:', e);
             }
         }
         
@@ -346,6 +350,19 @@
             
             // Следующий кадр
             requestAnimationFrame(gameLoop);
+        }
+        
+        // Функция для закрытия Web App
+        function closeWebApp() {
+            try {
+                tg.close();
+            } catch (e) {
+                console.log('Ошибка закрытия Web App:', e);
+                // Альтернативный способ - отправка данных и закрытие
+                tg.sendData(JSON.stringify({
+                    action: 'close_app'
+                }));
+            }
         }
         
         // Автоматический запуск игры через 2 секунды
