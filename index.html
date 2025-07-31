@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flappy Bird</title>
+    <title>3D Racing Game - First Person</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * {
@@ -11,91 +11,195 @@
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
-            background: linear-gradient(to bottom, #87CEEB 0%, #98FB98 100%);
-            font-family: Arial, sans-serif;
+            font-family: 'Arial', sans-serif;
+            background: #000;
             overflow: hidden;
-            user-select: none;
+            height: 100vh;
+            width: 100vw;
+            cursor: none;
         }
-        
+
         #gameCanvas {
             display: block;
-            margin: 0 auto;
-            border: 2px solid #333;
-            background: linear-gradient(to bottom, #87CEEB 0%, #98FB98 100%);
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(to bottom, #87CEEB 0%, #98FB98 50%, #8FBC8F 100%);
         }
-        
-        #gameUI {
+
+        #ui {
             position: absolute;
-            top: 10px;
-            left: 10px;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
             color: white;
-            font-size: 18px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            font-family: 'Courier New', monospace;
+        }
+
+        #score {
+            font-size: 24px;
             font-weight: bold;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+            margin-bottom: 10px;
+            color: #FFD700;
+        }
+
+        #speed {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #FF6B6B;
+        }
+
+        #bestScore {
+            font-size: 16px;
+            opacity: 0.8;
+            color: #4ECDC4;
+        }
+
+        #madeBy {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
             z-index: 100;
         }
-        
+
         #gameOver {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.8);
+            background: rgba(0, 0, 0, 0.95);
             color: white;
-            padding: 20px;
-            border-radius: 10px;
+            padding: 40px;
+            border-radius: 20px;
             text-align: center;
-            display: none;
             z-index: 200;
+            display: none;
+            border: 2px solid #FFD700;
         }
-        
+
         #startScreen {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.8);
+            background: rgba(0, 0, 0, 0.95);
             color: white;
-            padding: 30px;
-            border-radius: 15px;
+            padding: 40px;
+            border-radius: 20px;
             text-align: center;
-            z-index: 150;
+            z-index: 200;
+            border: 2px solid #FF6B6B;
         }
-        
+
         .btn {
-            background: #4CAF50;
+            background: linear-gradient(45deg, #FF6B6B, #FF8E53);
             color: white;
             border: none;
-            padding: 10px 20px;
-            margin: 5px;
-            border-radius: 5px;
+            padding: 15px 30px;
+            margin: 10px;
+            border-radius: 10px;
             cursor: pointer;
             font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
-        
+
         .btn:hover {
-            background: #45a049;
+            background: linear-gradient(45deg, #FF8E53, #FF6B6B);
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(255, 107, 107, 0.5);
+        }
+
+        #crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            z-index: 50;
+            pointer-events: none;
+        }
+
+        #crosshair::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 4px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+        }
+
+        #controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            text-align: center;
+            z-index: 100;
+            font-size: 12px;
+            opacity: 0.7;
+        }
+
+        #speedometer {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 120px;
+            height: 120px;
+            z-index: 100;
+        }
+
+        #speedometer canvas {
+            width: 100%;
+            height: 100%;
         }
     </style>
 </head>
 <body>
-    <canvas id="gameCanvas" width="400" height="600"></canvas>
+    <canvas id="gameCanvas"></canvas>
     
-    <div id="gameUI">
-        <div>Счёт: <span id="score">0</span></div>
-        <div>Лучший: <span id="bestScore">0</span></div>
+    <div id="ui">
+        <div id="score">Счёт: 0</div>
+        <div id="speed">Скорость: 0 км/ч</div>
+        <div id="bestScore">Лучший: 0</div>
+    </div>
+    
+    <div id="madeBy">Made by KakDibo</div>
+    <div id="crosshair"></div>
+    
+    <div id="speedometer">
+        <canvas id="speedCanvas"></canvas>
+    </div>
+    
+    <div id="controls">
+        WASD / Стрелки - Управление<br>
+        Мышь - Поворот камеры
     </div>
     
     <div id="startScreen">
-        <h1>🐦 Flappy Bird</h1>
-        <p>Касайтесь экрана или нажимайте пробел для прыжка</p>
+        <h1>🏎️ 3D Racing Game</h1>
+        <p>Реалистичная гоночная игра от первого лица</p>
+        <p>Управляйте красным масл каром и избегайте препятствий!</p>
         <button class="btn" onclick="startGame()">🎮 Начать игру</button>
     </div>
     
     <div id="gameOver">
-        <h2>💀 Игра окончена!</h2>
+        <h2>💥 Игра окончена!</h2>
         <p>Ваш счёт: <span id="finalScore">0</span></p>
         <p>Лучший счёт: <span id="finalBestScore">0</span></p>
         <button class="btn" onclick="restartGame()">🔄 Играть снова</button>
@@ -103,99 +207,577 @@
     </div>
 
     <script>
-        // Инициализация Telegram Games API
+        // Инициализация Telegram Web App
         const tg = window.Telegram.WebApp;
         tg.ready();
         tg.expand();
-        
+
+        // WebGL контекст
+        let gl;
+        let canvas;
+        let program;
+        let gameRunning = false;
+        let score = 0;
+        let bestScore = localStorage.getItem('racing3DBestScore') || 0;
+        let speed = 0;
+        let maxSpeed = 200;
+        let acceleration = 0;
+        let carPosition = { x: 0, y: 0, z: 0 };
+        let carRotation = 0;
+        let cameraRotation = 0;
+        let obstacles = [];
+        let roadSegments = [];
+        let lastTime = 0;
+        let keys = {};
+
         // Игровые переменные
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
+        let gameSpeed = 1;
+        let lastObstacleTime = 0;
+        let roadWidth = 20;
+        let segmentLength = 200;
+        let segmentsCount = 20;
+
+        // Элементы DOM
         const scoreElement = document.getElementById('score');
+        const speedElement = document.getElementById('speed');
         const bestScoreElement = document.getElementById('bestScore');
-        const finalScoreElement = document.getElementById('finalScore');
-        const finalBestScoreElement = document.getElementById('finalBestScore');
         const startScreen = document.getElementById('startScreen');
         const gameOverScreen = document.getElementById('gameOver');
-        
-        // Игровые объекты
-        let bird = {
-            x: 80,
-            y: 300,
-            velocity: 0,
-            gravity: 0.5,
-            jumpPower: -8,
-            size: 20
-        };
-        
-        let pipes = [];
-        let score = 0;
-        let bestScore = 0;
-        let gameRunning = false;
-        let gameStarted = false;
-        
-        // Загрузка лучшего счета
-        if (localStorage.getItem('flappyBirdBestScore')) {
-            bestScore = parseInt(localStorage.getItem('flappyBirdBestScore'));
-            bestScoreElement.textContent = bestScore;
+        const finalScoreElement = document.getElementById('finalScore');
+        const finalBestScoreElement = document.getElementById('finalBestScore');
+        const speedCanvas = document.getElementById('speedCanvas');
+
+        // Обновляем лучший счёт
+        bestScoreElement.textContent = `Лучший: ${bestScore}`;
+
+        // Шейдеры
+        const vertexShaderSource = `
+            attribute vec3 a_position;
+            attribute vec3 a_normal;
+            attribute vec2 a_texCoord;
+            
+            uniform mat4 u_modelViewMatrix;
+            uniform mat4 u_projectionMatrix;
+            uniform mat4 u_normalMatrix;
+            
+            varying vec3 v_normal;
+            varying vec2 v_texCoord;
+            varying vec3 v_position;
+            
+            void main() {
+                v_position = vec3(u_modelViewMatrix * vec4(a_position, 1.0));
+                v_normal = vec3(u_normalMatrix * vec4(a_normal, 0.0));
+                v_texCoord = a_texCoord;
+                gl_Position = u_projectionMatrix * u_modelViewMatrix * vec4(a_position, 1.0);
+            }
+        `;
+
+        const fragmentShaderSource = `
+            precision mediump float;
+            
+            varying vec3 v_normal;
+            varying vec2 v_texCoord;
+            varying vec3 v_position;
+            
+            uniform vec3 u_lightPosition;
+            uniform vec3 u_viewPosition;
+            uniform vec3 u_ambientColor;
+            uniform vec3 u_diffuseColor;
+            uniform vec3 u_specularColor;
+            uniform float u_shininess;
+            
+            void main() {
+                vec3 normal = normalize(v_normal);
+                vec3 lightDir = normalize(u_lightPosition - v_position);
+                vec3 viewDir = normalize(u_viewPosition - v_position);
+                vec3 reflectDir = reflect(-lightDir, normal);
+                
+                float diff = max(dot(normal, lightDir), 0.0);
+                float spec = pow(max(dot(viewDir, reflectDir), 0.0), u_shininess);
+                
+                vec3 ambient = u_ambientColor;
+                vec3 diffuse = diff * u_diffuseColor;
+                vec3 specular = spec * u_specularColor;
+                
+                gl_FragColor = vec4(ambient + diffuse + specular, 1.0);
+            }
+        `;
+
+        // Инициализация WebGL
+        function initWebGL() {
+            canvas = document.getElementById('gameCanvas');
+            gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+            
+            if (!gl) {
+                alert('WebGL не поддерживается!');
+                return;
+            }
+
+            // Установка размера canvas
+            function resizeCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                gl.viewport(0, 0, canvas.width, canvas.height);
+            }
+            
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+
+            // Создание программы
+            program = createProgram(vertexShaderSource, fragmentShaderSource);
+            gl.useProgram(program);
+
+            // Получение uniform переменных
+            window.u_modelViewMatrix = gl.getUniformLocation(program, 'u_modelViewMatrix');
+            window.u_projectionMatrix = gl.getUniformLocation(program, 'u_projectionMatrix');
+            window.u_normalMatrix = gl.getUniformLocation(program, 'u_normalMatrix');
+            window.u_lightPosition = gl.getUniformLocation(program, 'u_lightPosition');
+            window.u_viewPosition = gl.getUniformLocation(program, 'u_viewPosition');
+            window.u_ambientColor = gl.getUniformLocation(program, 'u_ambientColor');
+            window.u_diffuseColor = gl.getUniformLocation(program, 'u_diffuseColor');
+            window.u_specularColor = gl.getUniformLocation(program, 'u_specularColor');
+            window.u_shininess = gl.getUniformLocation(program, 'u_shininess');
+
+            // Настройка OpenGL
+            gl.enable(gl.DEPTH_TEST);
+            gl.enable(gl.CULL_FACE);
+            gl.clearColor(0.5, 0.7, 1.0, 1.0);
         }
-        
+
+        // Создание шейдерной программы
+        function createProgram(vertexSource, fragmentSource) {
+            const vertexShader = createShader(gl.VERTEX_SHADER, vertexSource);
+            const fragmentShader = createShader(gl.FRAGMENT_SHADER, fragmentSource);
+            
+            const program = gl.createProgram();
+            gl.attachShader(program, vertexShader);
+            gl.attachShader(program, fragmentShader);
+            gl.linkProgram(program);
+            
+            if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+                console.error('Ошибка линковки программы:', gl.getProgramInfoLog(program));
+                return null;
+            }
+            
+            return program;
+        }
+
+        // Создание шейдера
+        function createShader(type, source) {
+            const shader = gl.createShader(type);
+            gl.shaderSource(shader, source);
+            gl.compileShader(shader);
+            
+            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                console.error('Ошибка компиляции шейдера:', gl.getShaderInfoLog(shader));
+                return null;
+            }
+            
+            return shader;
+        }
+
+        // Создание буфера
+        function createBuffer(data) {
+            const buffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data), gl.STATIC_DRAW);
+            return buffer;
+        }
+
+        // Создание геометрии машины (масл кар)
+        function createCarGeometry() {
+            const vertices = [
+                // Кузов (красный)
+                -2.0, -0.5, -4.0,  2.0, -0.5, -4.0,  2.0,  1.0, -4.0, -2.0,  1.0, -4.0, // зад
+                -2.0, -0.5,  4.0,  2.0, -0.5,  4.0,  2.0,  1.0,  4.0, -2.0,  1.0,  4.0, // перед
+                -2.0, -0.5, -4.0, -2.0, -0.5,  4.0, -2.0,  1.0,  4.0, -2.0,  1.0, -4.0, // левая
+                 2.0, -0.5, -4.0,  2.0, -0.5,  4.0,  2.0,  1.0,  4.0,  2.0,  1.0, -4.0, // правая
+                -2.0,  1.0, -4.0,  2.0,  1.0, -4.0,  2.0,  1.0,  4.0, -2.0,  1.0,  4.0, // крыша
+                
+                // Капот (более темный красный)
+                -1.5,  1.0,  4.0,  1.5,  1.0,  4.0,  1.5,  1.5,  5.0, -1.5,  1.5,  5.0,
+                
+                // Колеса
+                -2.5, -0.5, -3.0, -1.5, -0.5, -3.0, -1.5,  0.5, -3.0, -2.5,  0.5, -3.0, // левое заднее
+                 1.5, -0.5, -3.0,  2.5, -0.5, -3.0,  2.5,  0.5, -3.0,  1.5,  0.5, -3.0, // правое заднее
+                -2.5, -0.5,  3.0, -1.5, -0.5,  3.0, -1.5,  0.5,  3.0, -2.5,  0.5,  3.0, // левое переднее
+                 1.5, -0.5,  3.0,  2.5, -0.5,  3.0,  2.5,  0.5,  3.0,  1.5,  0.5,  3.0, // правое переднее
+            ];
+
+            const normals = [];
+            for (let i = 0; i < vertices.length; i += 12) {
+                const v1 = [vertices[i+3] - vertices[i], vertices[i+4] - vertices[i+1], vertices[i+5] - vertices[i+2]];
+                const v2 = [vertices[i+6] - vertices[i], vertices[i+7] - vertices[i+1], vertices[i+8] - vertices[i+2]];
+                const normal = crossProduct(v1, v2);
+                for (let j = 0; j < 4; j++) {
+                    normals.push(...normal);
+                }
+            }
+
+            return {
+                vertices: createBuffer(vertices),
+                normals: createBuffer(normals),
+                vertexCount: vertices.length / 3
+            };
+        }
+
+        // Создание геометрии препятствий
+        function createObstacleGeometry(type) {
+            let vertices = [];
+            
+            switch(type) {
+                case 'box':
+                    vertices = [
+                        -1.0, -1.0, -1.0,  1.0, -1.0, -1.0,  1.0,  1.0, -1.0, -1.0,  1.0, -1.0,
+                        -1.0, -1.0,  1.0,  1.0, -1.0,  1.0,  1.0,  1.0,  1.0, -1.0,  1.0,  1.0,
+                        -1.0, -1.0, -1.0, -1.0, -1.0,  1.0, -1.0,  1.0,  1.0, -1.0,  1.0, -1.0,
+                         1.0, -1.0, -1.0,  1.0, -1.0,  1.0,  1.0,  1.0,  1.0,  1.0,  1.0, -1.0,
+                        -1.0,  1.0, -1.0,  1.0,  1.0, -1.0,  1.0,  1.0,  1.0, -1.0,  1.0,  1.0,
+                    ];
+                    break;
+                case 'tire':
+                    // Цилиндр для шины
+                    const segments = 16;
+                    for (let i = 0; i < segments; i++) {
+                        const angle1 = (i / segments) * 2 * Math.PI;
+                        const angle2 = ((i + 1) / segments) * 2 * Math.PI;
+                        const x1 = Math.cos(angle1), z1 = Math.sin(angle1);
+                        const x2 = Math.cos(angle2), z2 = Math.sin(angle2);
+                        
+                        vertices.push(
+                            x1, -0.5, z1,  x2, -0.5, z2,  x2,  0.5, z2,  x1,  0.5, z1,
+                            x1, -0.5, z1,  x1,  0.5, z1,  x2,  0.5, z2,  x2, -0.5, z2
+                        );
+                    }
+                    break;
+                case 'person':
+                    // Человек (упрощенная модель)
+                    vertices = [
+                        // Голова
+                        -0.3,  1.5, -0.3,  0.3,  1.5, -0.3,  0.3,  2.0, -0.3, -0.3,  2.0, -0.3,
+                        -0.3,  1.5,  0.3,  0.3,  1.5,  0.3,  0.3,  2.0,  0.3, -0.3,  2.0,  0.3,
+                        // Тело
+                        -0.5,  0.0, -0.3,  0.5,  0.0, -0.3,  0.5,  1.5, -0.3, -0.5,  1.5, -0.3,
+                        -0.5,  0.0,  0.3,  0.5,  0.0,  0.3,  0.5,  1.5,  0.3, -0.5,  1.5,  0.3,
+                        // Руки
+                        -0.8,  1.0, -0.2, -0.5,  1.0, -0.2, -0.5,  1.5, -0.2, -0.8,  1.5, -0.2,
+                         0.5,  1.0, -0.2,  0.8,  1.0, -0.2,  0.8,  1.5, -0.2,  0.5,  1.5, -0.2,
+                        // Ноги
+                        -0.3, -1.0, -0.2,  0.0, -1.0, -0.2,  0.0,  0.0, -0.2, -0.3,  0.0, -0.2,
+                         0.0, -1.0, -0.2,  0.3, -1.0, -0.2,  0.3,  0.0, -0.2,  0.0,  0.0, -0.2,
+                    ];
+                    break;
+                case 'other-car':
+                    // Другая машина (желтая)
+                    vertices = [
+                        -1.5, -0.5, -3.0,  1.5, -0.5, -3.0,  1.5,  0.8, -3.0, -1.5,  0.8, -3.0,
+                        -1.5, -0.5,  3.0,  1.5, -0.5,  3.0,  1.5,  0.8,  3.0, -1.5,  0.8,  3.0,
+                        -1.5, -0.5, -3.0, -1.5, -0.5,  3.0, -1.5,  0.8,  3.0, -1.5,  0.8, -3.0,
+                         1.5, -0.5, -3.0,  1.5, -0.5,  3.0,  1.5,  0.8,  3.0,  1.5,  0.8, -3.0,
+                        -1.5,  0.8, -3.0,  1.5,  0.8, -3.0,  1.5,  0.8,  3.0, -1.5,  0.8,  3.0,
+                    ];
+                    break;
+            }
+
+            const normals = [];
+            for (let i = 0; i < vertices.length; i += 12) {
+                const v1 = [vertices[i+3] - vertices[i], vertices[i+4] - vertices[i+1], vertices[i+5] - vertices[i+2]];
+                const v2 = [vertices[i+6] - vertices[i], vertices[i+7] - vertices[i+1], vertices[i+8] - vertices[i+2]];
+                const normal = crossProduct(v1, v2);
+                for (let j = 0; j < 4; j++) {
+                    normals.push(...normal);
+                }
+            }
+
+            return {
+                vertices: createBuffer(vertices),
+                normals: createBuffer(normals),
+                vertexCount: vertices.length / 3
+            };
+        }
+
+        // Векторное произведение
+        function crossProduct(a, b) {
+            return [
+                a[1] * b[2] - a[2] * b[1],
+                a[2] * b[0] - a[0] * b[2],
+                a[0] * b[1] - a[1] * b[0]
+            ];
+        }
+
+        // Создание матриц
+        function createProjectionMatrix(fov, aspect, near, far) {
+            const f = Math.tan(Math.PI * 0.5 - 0.5 * fov);
+            const rangeInv = 1.0 / (near - far);
+            
+            return [
+                f / aspect, 0, 0, 0,
+                0, f, 0, 0,
+                0, 0, (near + far) * rangeInv, -1,
+                0, 0, near * far * rangeInv * 2, 0
+            ];
+        }
+
+        function createModelViewMatrix(translation, rotation) {
+            const cos = Math.cos(rotation);
+            const sin = Math.sin(rotation);
+            
+            return [
+                cos, 0, sin, 0,
+                0, 1, 0, 0,
+                -sin, 0, cos, 0,
+                translation[0], translation[1], translation[2], 1
+            ];
+        }
+
         // Обработчики событий
-        canvas.addEventListener('click', jump);
-        canvas.addEventListener('touchstart', function(e) {
+        document.addEventListener('keydown', (e) => {
+            keys[e.code] = true;
             e.preventDefault();
-            jump();
         });
-        document.addEventListener('keydown', function(e) {
-            if (e.code === 'Space') {
-                e.preventDefault();
-                jump();
+
+        document.addEventListener('keyup', (e) => {
+            keys[e.code] = false;
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (gameRunning) {
+                cameraRotation += e.movementX * 0.01;
+                cameraRotation = Math.max(-0.5, Math.min(0.5, cameraRotation));
             }
         });
-        
-        function jump() {
-            if (!gameRunning) return;
-            bird.velocity = bird.jumpPower;
+
+        document.addEventListener('pointerlockchange', () => {
+            if (document.pointerLockElement === canvas) {
+                document.addEventListener('mousemove', (e) => {
+                    if (gameRunning) {
+                        cameraRotation += e.movementX * 0.01;
+                        cameraRotation = Math.max(-0.5, Math.min(0.5, cameraRotation));
+                    }
+                });
+            }
+        });
+
+        // Обновление управления
+        function updateControls(deltaTime) {
+            if (keys['KeyA'] || keys['ArrowLeft']) {
+                carPosition.x -= 50 * deltaTime;
+            }
+            if (keys['KeyD'] || keys['ArrowRight']) {
+                carPosition.x += 50 * deltaTime;
+            }
+            
+            // Ограничение движения по дороге
+            carPosition.x = Math.max(-roadWidth/2 + 2, Math.min(roadWidth/2 - 2, carPosition.x));
+            
+            // Ускорение
+            if (keys['KeyW'] || keys['ArrowUp']) {
+                acceleration = Math.min(acceleration + 100 * deltaTime, 200);
+            } else if (keys['KeyS'] || keys['ArrowDown']) {
+                acceleration = Math.max(acceleration - 200 * deltaTime, -50);
+            } else {
+                acceleration = Math.max(acceleration - 50 * deltaTime, 0);
+            }
+            
+            speed = Math.max(0, Math.min(maxSpeed, speed + acceleration * deltaTime));
         }
-        
+
+        // Создание препятствия
+        function createObstacle() {
+            const types = ['box', 'tire', 'person', 'other-car'];
+            const type = types[Math.floor(Math.random() * types.length)];
+            
+            const x = (Math.random() - 0.5) * (roadWidth - 4);
+            const z = carPosition.z - 100 - Math.random() * 50;
+            
+            obstacles.push({
+                type: type,
+                position: [x, 0, z],
+                geometry: createObstacleGeometry(type),
+                hitbox: {
+                    min: [x - 1, 0, z - 1],
+                    max: [x + 1, 2, z + 1]
+                }
+            });
+        }
+
+        // Проверка столкновений
+        function checkCollisions() {
+            const carHitbox = {
+                min: [carPosition.x - 1.5, carPosition.y, carPosition.z - 2],
+                max: [carPosition.x + 1.5, carPosition.y + 1, carPosition.z + 2]
+            };
+            
+            for (let obstacle of obstacles) {
+                if (carHitbox.max[0] > obstacle.hitbox.min[0] &&
+                    carHitbox.min[0] < obstacle.hitbox.max[0] &&
+                    carHitbox.max[1] > obstacle.hitbox.min[1] &&
+                    carHitbox.min[1] < obstacle.hitbox.max[1] &&
+                    carHitbox.max[2] > obstacle.hitbox.min[2] &&
+                    carHitbox.min[2] < obstacle.hitbox.max[2]) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // Обновление препятствий
+        function updateObstacles(deltaTime) {
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                const obstacle = obstacles[i];
+                obstacle.position[2] += speed * deltaTime;
+                
+                if (obstacle.position[2] > carPosition.z + 10) {
+                    obstacles.splice(i, 1);
+                    score++;
+                    scoreElement.textContent = `Счёт: ${score}`;
+                }
+            }
+        }
+
+        // Рендеринг
+        function render() {
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+            
+            const aspect = canvas.width / canvas.height;
+            const projectionMatrix = createProjectionMatrix(Math.PI / 4, aspect, 0.1, 1000);
+            gl.uniformMatrix4fv(window.u_projectionMatrix, false, projectionMatrix);
+            
+            // Камера от первого лица
+            const cameraMatrix = createModelViewMatrix([0, 1.5, 0], cameraRotation);
+            gl.uniformMatrix4fv(window.u_modelViewMatrix, false, cameraMatrix);
+            
+            // Освещение
+            gl.uniform3f(window.u_lightPosition, 0, 10, 0);
+            gl.uniform3f(window.u_viewPosition, 0, 1.5, 0);
+            gl.uniform3f(window.u_ambientColor, 0.2, 0.2, 0.2);
+            gl.uniform3f(window.u_diffuseColor, 0.8, 0.8, 0.8);
+            gl.uniform3f(window.u_specularColor, 1.0, 1.0, 1.0);
+            gl.uniform1f(window.u_shininess, 32.0);
+            
+            // Рендеринг дороги
+            renderRoad();
+            
+            // Рендеринг препятствий
+            for (let obstacle of obstacles) {
+                renderObstacle(obstacle);
+            }
+        }
+
+        function renderRoad() {
+            // Простая дорога с полосами
+            const roadGeometry = {
+                vertices: createBuffer([
+                    -roadWidth/2, 0, -100,  roadWidth/2, 0, -100,  roadWidth/2, 0, 100, -roadWidth/2, 0, 100
+                ]),
+                normals: createBuffer([0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0]),
+                vertexCount: 4
+            };
+            
+            gl.uniform3f(window.u_diffuseColor, 0.3, 0.3, 0.3);
+            renderGeometry(roadGeometry);
+        }
+
+        function renderObstacle(obstacle) {
+            const modelMatrix = createModelViewMatrix(obstacle.position, 0);
+            gl.uniformMatrix4fv(window.u_modelViewMatrix, false, modelMatrix);
+            
+            switch(obstacle.type) {
+                case 'box':
+                    gl.uniform3f(window.u_diffuseColor, 0.6, 0.4, 0.2);
+                    break;
+                case 'tire':
+                    gl.uniform3f(window.u_diffuseColor, 0.1, 0.1, 0.1);
+                    break;
+                case 'person':
+                    gl.uniform3f(window.u_diffuseColor, 0.2, 0.4, 0.8);
+                    break;
+                case 'other-car':
+                    gl.uniform3f(window.u_diffuseColor, 1.0, 0.8, 0.0);
+                    break;
+            }
+            
+            renderGeometry(obstacle.geometry);
+        }
+
+        function renderGeometry(geometry) {
+            gl.bindBuffer(gl.ARRAY_BUFFER, geometry.vertices);
+            const positionLocation = gl.getAttribLocation(program, 'a_position');
+            gl.enableVertexAttribArray(positionLocation);
+            gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 0, 0);
+            
+            gl.bindBuffer(gl.ARRAY_BUFFER, geometry.normals);
+            const normalLocation = gl.getAttribLocation(program, 'a_normal');
+            gl.enableVertexAttribArray(normalLocation);
+            gl.vertexAttribPointer(normalLocation, 3, gl.FLOAT, false, 0, 0);
+            
+            gl.drawArrays(gl.TRIANGLE_FAN, 0, geometry.vertexCount);
+        }
+
+        // Игровой цикл
+        function gameLoop(currentTime) {
+            if (!gameRunning) return;
+            
+            const deltaTime = (currentTime - lastTime) / 1000;
+            lastTime = currentTime;
+            
+            updateControls(deltaTime);
+            updateObstacles(deltaTime);
+            
+            // Создание препятствий
+            if (currentTime - lastObstacleTime > 2000 / gameSpeed) {
+                createObstacle();
+                lastObstacleTime = currentTime;
+            }
+            
+            // Проверка столкновений
+            if (checkCollisions()) {
+                gameOver();
+                return;
+            }
+            
+            // Обновление скорости
+            gameSpeed = Math.floor(score / 10) + 1;
+            speedElement.textContent = `Скорость: ${Math.round(speed)} км/ч`;
+            
+            render();
+            requestAnimationFrame(gameLoop);
+        }
+
         function startGame() {
             startScreen.style.display = 'none';
             gameRunning = true;
-            gameStarted = true;
-            resetGame();
-            gameLoop();
-        }
-        
-        function resetGame() {
-            bird.y = 300;
-            bird.velocity = 0;
-            pipes = [];
             score = 0;
-            scoreElement.textContent = score;
+            speed = 0;
+            acceleration = 0;
+            carPosition = { x: 0, y: 0, z: 0 };
+            carRotation = 0;
+            cameraRotation = 0;
+            obstacles = [];
+            gameSpeed = 1;
+            
+            scoreElement.textContent = 'Счёт: 0';
+            speedElement.textContent = 'Скорость: 0 км/ч';
+            
+            canvas.requestPointerLock();
+            lastTime = performance.now();
+            gameLoop(lastTime);
         }
-        
-        function restartGame() {
-            gameOverScreen.style.display = 'none';
-            resetGame();
-            gameRunning = true;
-            gameLoop();
-        }
-        
+
         function gameOver() {
             gameRunning = false;
+            document.exitPointerLock();
             
-            // Обновление лучшего счета
             if (score > bestScore) {
                 bestScore = score;
-                localStorage.setItem('flappyBirdBestScore', bestScore);
-                bestScoreElement.textContent = bestScore;
+                localStorage.setItem('racing3DBestScore', bestScore);
+                bestScoreElement.textContent = `Лучший: ${bestScore}`;
             }
             
             finalScoreElement.textContent = score;
             finalBestScoreElement.textContent = bestScore;
             gameOverScreen.style.display = 'block';
             
-            // Отправка результата в бота через Web App
             try {
                 tg.sendData(JSON.stringify({
                     action: 'game_result',
@@ -206,171 +788,25 @@
                 console.log('Ошибка отправки данных в бота:', e);
             }
         }
-        
-        function createPipe() {
-            const gapHeight = 120;
-            const gapY = Math.random() * (canvas.height - gapHeight - 100) + 50;
-            
-            pipes.push({
-                x: canvas.width,
-                gapY: gapY,
-                gapHeight: gapHeight,
-                passed: false,
-                width: 60
-            });
+
+        function restartGame() {
+            gameOverScreen.style.display = 'none';
+            startGame();
         }
-        
-        function updatePipes() {
-            for (let i = pipes.length - 1; i >= 0; i--) {
-                const pipe = pipes[i];
-                pipe.x -= 2;
-                
-                // Проверка прохождения трубы
-                if (!pipe.passed && pipe.x + pipe.width < bird.x) {
-                    pipe.passed = true;
-                    score++;
-                    scoreElement.textContent = score;
-                }
-                
-                // Удаление труб за пределами экрана
-                if (pipe.x + pipe.width < 0) {
-                    pipes.splice(i, 1);
-                }
-            }
-            
-            // Создание новых труб
-            if (pipes.length === 0 || pipes[pipes.length - 1].x < canvas.width - 200) {
-                createPipe();
-            }
-        }
-        
-        function checkCollision() {
-            // Столкновение с границами
-            if (bird.y < 0 || bird.y + bird.size > canvas.height) {
-                return true;
-            }
-            
-            // Столкновение с трубами
-            for (const pipe of pipes) {
-                if (bird.x < pipe.x + pipe.width &&
-                    bird.x + bird.size > pipe.x &&
-                    (bird.y < pipe.gapY || bird.y + bird.size > pipe.gapY + pipe.gapHeight)) {
-                    return true;
-                }
-            }
-            
-            return false;
-        }
-        
-        function updateBird() {
-            bird.velocity += bird.gravity;
-            bird.y += bird.velocity;
-        }
-        
-        function drawBird() {
-            ctx.fillStyle = '#FFD700';
-            ctx.fillRect(bird.x, bird.y, bird.size, bird.size);
-            
-            // Глаз
-            ctx.fillStyle = '#000';
-            ctx.fillRect(bird.x + 15, bird.y + 5, 3, 3);
-            
-            // Клюв
-            ctx.fillStyle = '#FF6B35';
-            ctx.fillRect(bird.x + bird.size, bird.y + 8, 8, 4);
-        }
-        
-        function drawPipes() {
-            ctx.fillStyle = '#228B22';
-            for (const pipe of pipes) {
-                // Верхняя труба
-                ctx.fillRect(pipe.x, 0, pipe.width, pipe.gapY);
-                
-                // Нижняя труба
-                ctx.fillRect(pipe.x, pipe.gapY + pipe.gapHeight, 
-                           pipe.width, canvas.height - pipe.gapY - pipe.gapHeight);
-                
-                // Ободки труб
-                ctx.fillStyle = '#006400';
-                ctx.fillRect(pipe.x - 5, pipe.gapY - 20, pipe.width + 10, 20);
-                ctx.fillRect(pipe.x - 5, pipe.gapY + pipe.gapHeight, pipe.width + 10, 20);
-                ctx.fillStyle = '#228B22';
-            }
-        }
-        
-        function drawBackground() {
-            // Небо
-            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-            gradient.addColorStop(0, '#87CEEB');
-            gradient.addColorStop(1, '#98FB98');
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            // Облака
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-            for (let i = 0; i < 3; i++) {
-                const x = (Date.now() * 0.02 + i * 200) % (canvas.width + 100) - 50;
-                const y = 50 + i * 30;
-                ctx.beginPath();
-                ctx.arc(x, y, 20, 0, Math.PI * 2);
-                ctx.arc(x + 25, y, 25, 0, Math.PI * 2);
-                ctx.arc(x + 50, y, 20, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        }
-        
-        function drawScore() {
-            ctx.fillStyle = 'white';
-            ctx.font = 'bold 24px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText(`Счёт: ${score}`, canvas.width / 2, 40);
-        }
-        
-        function gameLoop() {
-            if (!gameRunning) return;
-            
-            // Очистка canvas
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // Обновление игры
-            updateBird();
-            updatePipes();
-            
-            // Проверка столкновений
-            if (checkCollision()) {
-                gameOver();
-                return;
-            }
-            
-            // Отрисовка
-            drawBackground();
-            drawPipes();
-            drawBird();
-            drawScore();
-            
-            // Следующий кадр
-            requestAnimationFrame(gameLoop);
-        }
-        
-        // Функция для закрытия Web App
+
         function closeWebApp() {
             try {
                 tg.close();
             } catch (e) {
                 console.log('Ошибка закрытия Web App:', e);
-                // Альтернативный способ - отправка данных и закрытие
                 tg.sendData(JSON.stringify({
                     action: 'close_app'
                 }));
             }
         }
-        
-        // Автоматический запуск игры через 2 секунды
-        setTimeout(() => {
-            if (!gameStarted) {
-                startGame();
-            }
-        }, 2000);
+
+        // Инициализация
+        initWebGL();
     </script>
 </body>
 </html> 
