@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flappy Bird</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(to bottom, #87CEEB 0%, #98FB98 100%);
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+            user-select: none;
+        }
+        
+        #gameCanvas {
+            display: block;
+            margin: 0 auto;
+            border: 2px solid #333;
+            background: linear-gradient(to bottom, #87CEEB 0%, #98FB98 100%);
+        }
+        
+        #gameUI {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+            z-index: 100;
+        }
+        
+        #gameOver {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            display: none;
+            z-index: 200;
+        }
+        
+        #startScreen {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            z-index: 150;
+        }
+        
+        .btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .btn:hover {
+            background: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="400" height="600"></canvas>
+    
+    <div id="gameUI">
+        <div>Счёт: <span id="score">0</span></div>
+        <div>Лучший: <span id="bestScore">0</span></div>
+    </div>
+    
+    <div id="startScreen">
+        <h1>🐦 Flappy Bird</h1>
+        <p>Касайтесь экрана или нажимайте пробел для прыжка</p>
+        <button class="btn" onclick="startGame()">🎮 Начать игру</button>
+    </div>
+    
+    <div id="gameOver">
+        <h2>💀 Игра окончена!</h2>
+        <p>Ваш счёт: <span id="finalScore">0</span></p>
+        <p>Лучший счёт: <span id="finalBestScore">0</span></p>
+        <button class="btn" onclick="restartGame()">🔄 Играть снова</button>
+    </div>
+
+    <script>
+        // Инициализация Telegram Games API
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
+        
+        // Игровые переменные
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreElement = document.getElementById('score');
+        const bestScoreElement = document.getElementById('bestScore');
+        const finalScoreElement = document.getElementById('finalScore');
+        const finalBestScoreElement = document.getElementById('finalBestScore');
+        const startScreen = document.getElementById('startScreen');
+        const gameOverScreen = document.getElementById('gameOver');
+        
+        // Игровые объекты
+        let bird = {
+            x: 80,
+            y: 300,
+            velocity: 0,
+            gravity: 0.5,
+            jumpPower: -8,
+            size: 20
+        };
+        
+        let pipes = [];
+        let score = 0;
+        let bestScore = 0;
+        let gameRunning = false;
+        let gameStarted = false;
+        
+        // Загрузка лучшего счета
+        if (localStorage.getItem('flappyBirdBestScore')) {
+            bestScore = parseInt(localStorage.getItem('flappyBirdBestScore'));
+            bestScoreElement.textContent = bestScore;
+        }
+        
+        // Обработчики событий
+        canvas.addEventListener('click', jump);
+        canvas.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            jump();
+        });
+        document.addEventListener('keydown', function(e) {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                jump();
+            }
+        });
+        
+        function jump() {
+            if (!gameRunning) return;
+            bird.velocity = bird.jumpPower;
+        }
+        
+        function startGame() {
+            startScreen.style.display = 'none';
+            gameRunning = true;
+            gameStarted = true;
+            resetGame();
+            gameLoop();
+        }
+        
+        function resetGame() {
+            bird.y = 300;
+            bird.velocity = 0;
+            pipes = [];
+            score = 0;
+            scoreElement.textContent = score;
+        }
+        
+        function restartGame() {
+            gameOverScreen.style.display = 'none';
+            resetGame();
+            gameRunning = true;
+        }
+        
+        function gameOver() {
+            gameRunning = false;
+            
+            // Обновление лучшего счета
+            if (score > bestScore) {
+                bestScore = score;
+                localStorage.setItem('flappyBirdBestScore', bestScore);
+                bestScoreElement.textContent = bestScore;
+            }
+            
+            finalScoreElement.textContent = score;
+            finalBestScoreElement.textContent = bestScore;
+            gameOverScreen.style.display = 'block';
+            
+            // Отправка результата в бота
+            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                tg.sendData(JSON.stringify({
+                    action: 'game_result',
+                    score: score,
+                    best_score: bestScore
+                }));
+            }
+        }
+        
+        function createPipe() {
+            const gapHeight = 120;
+            const gapY = Math.random() * (canvas.height - gapHeight - 100) + 50;
+            
+            pipes.push({
+                x: canvas.width,
+                gapY: gapY,
+                gapHeight: gapHeight,
+                passed: false,
+                width: 60
+            });
+        }
+        
+        function updatePipes() {
+            for (let i = pipes.length - 1; i >= 0; i--) {
+                const pipe = pipes[i];
+                pipe.x -= 2;
+                
+                // Проверка прохождения трубы
+                if (!pipe.passed && pipe.x + pipe.width < bird.x) {
+                    pipe.passed = true;
+                    score++;
+                    scoreElement.textContent = score;
+                }
+                
+                // Удаление труб за пределами экрана
+                if (pipe.x + pipe.width < 0) {
+                    pipes.splice(i, 1);
+                }
+            }
+            
+            // Создание новых труб
+            if (pipes.length === 0 || pipes[pipes.length - 1].x < canvas.width - 200) {
+                createPipe();
+            }
+        }
+        
+        function checkCollision() {
+            // Столкновение с границами
+            if (bird.y < 0 || bird.y + bird.size > canvas.height) {
+                return true;
+            }
+            
+            // Столкновение с трубами
+            for (const pipe of pipes) {
+                if (bird.x < pipe.x + pipe.width &&
+                    bird.x + bird.size > pipe.x &&
+                    (bird.y < pipe.gapY || bird.y + bird.size > pipe.gapY + pipe.gapHeight)) {
+                    return true;
+                }
+            }
+            
+            return false;
+        }
+        
+        function updateBird() {
+            bird.velocity += bird.gravity;
+            bird.y += bird.velocity;
+        }
+        
+        function drawBird() {
+            ctx.fillStyle = '#FFD700';
+            ctx.fillRect(bird.x, bird.y, bird.size, bird.size);
+            
+            // Глаз
+            ctx.fillStyle = '#000';
+            ctx.fillRect(bird.x + 15, bird.y + 5, 3, 3);
+            
+            // Клюв
+            ctx.fillStyle = '#FF6B35';
+            ctx.fillRect(bird.x + bird.size, bird.y + 8, 8, 4);
+        }
+        
+        function drawPipes() {
+            ctx.fillStyle = '#228B22';
+            for (const pipe of pipes) {
+                // Верхняя труба
+                ctx.fillRect(pipe.x, 0, pipe.width, pipe.gapY);
+                
+                // Нижняя труба
+                ctx.fillRect(pipe.x, pipe.gapY + pipe.gapHeight, 
+                           pipe.width, canvas.height - pipe.gapY - pipe.gapHeight);
+                
+                // Ободки труб
+                ctx.fillStyle = '#006400';
+                ctx.fillRect(pipe.x - 5, pipe.gapY - 20, pipe.width + 10, 20);
+                ctx.fillRect(pipe.x - 5, pipe.gapY + pipe.gapHeight, pipe.width + 10, 20);
+                ctx.fillStyle = '#228B22';
+            }
+        }
+        
+        function drawBackground() {
+            // Небо
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#87CEEB');
+            gradient.addColorStop(1, '#98FB98');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Облака
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+            for (let i = 0; i < 3; i++) {
+                const x = (Date.now() * 0.02 + i * 200) % (canvas.width + 100) - 50;
+                const y = 50 + i * 30;
+                ctx.beginPath();
+                ctx.arc(x, y, 20, 0, Math.PI * 2);
+                ctx.arc(x + 25, y, 25, 0, Math.PI * 2);
+                ctx.arc(x + 50, y, 20, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+        
+        function drawScore() {
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 24px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(`Счёт: ${score}`, canvas.width / 2, 40);
+        }
+        
+        function gameLoop() {
+            if (!gameRunning) return;
+            
+            // Очистка canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Обновление игры
+            updateBird();
+            updatePipes();
+            
+            // Проверка столкновений
+            if (checkCollision()) {
+                gameOver();
+                return;
+            }
+            
+            // Отрисовка
+            drawBackground();
+            drawPipes();
+            drawBird();
+            drawScore();
+            
+            // Следующий кадр
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // Автоматический запуск игры через 2 секунды
+        setTimeout(() => {
+            if (!gameStarted) {
+                startGame();
+            }
+        }, 2000);
+    </script>
+</body>
+</html> 
