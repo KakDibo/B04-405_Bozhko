@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flappy Bird</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <title>BaronShop - Интернет-магазин</title>
     <style>
         * {
             margin: 0;
@@ -13,447 +12,543 @@
         }
 
         body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
-            overflow: hidden;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
         }
 
-        #gameCanvas {
-            border: 2px solid #333;
-            background: linear-gradient(to bottom, #87CEEB 0%, #98FB98 100%);
-            display: block;
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
         }
 
-        #gameUI {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            color: white;
-            font-size: 18px;
-            font-weight: bold;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
-        }
-
-        #madeBy {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            color: white;
-            font-size: 14px;
-            font-weight: bold;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
-            z-index: 100;
-        }
-
-        #startScreen {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.9);
-            color: white;
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
             padding: 30px;
-            border-radius: 15px;
+            margin-bottom: 30px;
             text-align: center;
-            z-index: 10;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         }
 
-        #gameOver {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.9);
-            color: white;
-            padding: 30px;
-            border-radius: 15px;
-            text-align: center;
-            z-index: 10;
-            display: none;
+        .header h1 {
+            font-size: 3em;
+            color: #4a5568;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
         }
 
-        .btn {
-            background: linear-gradient(45deg, #4CAF50, #45a049);
+        .header p {
+            font-size: 1.2em;
+            color: #718096;
+        }
+
+        .catalog {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .product-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .product-emoji {
+            font-size: 4em;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .product-name {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .product-price {
+            font-size: 1.8em;
+            color: #e53e3e;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .product-stock {
+            color: #38a169;
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .add-to-cart-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            padding: 15px 30px;
-            margin: 10px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 1.1em;
             font-weight: bold;
+            cursor: pointer;
             transition: all 0.3s ease;
         }
 
-        .btn:hover {
-            background: linear-gradient(45deg, #45a049, #4CAF50);
-            transform: scale(1.05);
+        .add-to-cart-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .add-to-cart-btn:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .cart-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .cart-title {
+            font-size: 2em;
+            color: #2d3748;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #e2e8f0;
+            margin-bottom: 10px;
+        }
+
+        .cart-item:last-child {
+            border-bottom: none;
+        }
+
+        .cart-item-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .cart-item-emoji {
+            font-size: 2em;
+        }
+
+        .cart-item-details h4 {
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .cart-item-details p {
+            color: #718096;
+            font-size: 0.9em;
+        }
+
+        .cart-item-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .quantity-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .quantity-btn:hover {
+            background: #5a67d8;
+        }
+
+        .quantity {
+            font-weight: bold;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .cart-total {
+            text-align: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #e53e3e;
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 12px;
+        }
+
+        .checkout-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            border: none;
+            padding: 18px;
+            border-radius: 12px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .checkout-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(72, 187, 120, 0.4);
+        }
+
+        .checkout-btn:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .empty-cart {
+            text-align: center;
+            color: #718096;
+            font-size: 1.2em;
+            padding: 40px;
+        }
+
+        .contact-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .contact-title {
+            font-size: 2em;
+            color: #2d3748;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .contact-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .contact-item {
+            text-align: center;
+            padding: 20px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 12px;
+        }
+
+        .contact-item h3 {
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .contact-item p {
+            color: #718096;
+        }
+
+        .telegram-link {
+            display: inline-block;
+            background: #0088cc;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: bold;
+            margin-top: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .telegram-link:hover {
+            background: #006699;
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .catalog {
+                grid-template-columns: 1fr;
+            }
+            
+            .cart-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .cart-item-controls {
+                align-self: flex-end;
+            }
         }
     </style>
 </head>
 <body>
-    <canvas id="gameCanvas" width="400" height="600"></canvas>
-    
-    <div id="gameUI">
-        <div>Счёт: <span id="score">0</span></div>
-        <div>Лучший: <span id="bestScore">0</span></div>
-    </div>
-    
-    <div id="madeBy">Made by KakDibo</div>
-    
-    <div id="startScreen">
-        <h1>🐦 Flappy Bird</h1>
-        <p>Касайтесь экрана или нажимайте пробел для прыжка</p>
-        <button class="btn" onclick="startGame()">🎮 Начать игру</button>
-    </div>
-    
-    <div id="gameOver">
-        <h2>💀 Игра окончена!</h2>
-        <p>Ваш счёт: <span id="finalScore">0</span></p>
-        <p>Лучший счёт: <span id="finalBestScore">0</span></p>
-        <button class="btn" onclick="restartGame()">🔄 Играть снова</button>
-        <button class="btn" onclick="closeWebApp()">🏠 Вернуться в бота</button>
+    <div class="container">
+        <div class="header">
+            <h1>🛍️ BaronShop</h1>
+            <p>Качественные товары по доступным ценам</p>
+        </div>
+
+        <div class="catalog" id="catalog">
+            <!-- Товары будут добавлены через JavaScript -->
+        </div>
+
+        <div class="cart-section" id="cartSection" style="display: none;">
+            <h2 class="cart-title">🛒 Ваша корзина</h2>
+            <div id="cartItems"></div>
+            <div class="cart-total" id="cartTotal">Итого: 0 руб.</div>
+            <button class="checkout-btn" id="checkoutBtn" onclick="checkout()">Оформить заказ</button>
+        </div>
+
+        <div class="contact-section">
+            <h2 class="contact-title">📞 Контакты</h2>
+            <div class="contact-info">
+                <div class="contact-item">
+                    <h3>💬 Telegram</h3>
+                    <p>Свяжитесь с нами в Telegram</p>
+                    <a href="https://t.me/baronshop_support" class="telegram-link" target="_blank">@baronshop_support</a>
+                </div>
+                <div class="contact-item">
+                    <h3>📱 Телефон</h3>
+                    <p>+7 (XXX) XXX-XX-XX</p>
+                </div>
+                <div class="contact-item">
+                    <h3>📧 Email</h3>
+                    <p>info@baronshop.ru</p>
+                </div>
+                <div class="contact-item">
+                    <h3>🕒 Время работы</h3>
+                    <p>Пн-Пт: 9:00 - 21:00<br>Сб-Вс: 10:00 - 20:00</p>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
-        const tg = window.Telegram.WebApp;
-        tg.ready();
-        tg.expand();
-
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const scoreElement = document.getElementById('score');
-        const bestScoreElement = document.getElementById('bestScore');
-        const startScreen = document.getElementById('startScreen');
-        const gameOverScreen = document.getElementById('gameOver');
-        const finalScoreElement = document.getElementById('finalScore');
-        const finalBestScoreElement = document.getElementById('finalBestScore');
-
-        let gameRunning = false;
-        let score = 0;
-        let bestScore = localStorage.getItem('flappyBirdBestScore') || 0;
-        let bird = {
-            x: 100,
-            y: 300,
-            velocity: 0,
-            gravity: 0.6, // Увеличена гравитация
-            jumpPower: -9, // Увеличен прыжок
-            width: 30, // Более компактная птица
-            height: 30, // Квадратная форма как в оригинале
-            rotation: 0
-        };
-        let pipes = [];
-        let pipeWidth = 60; // Вернул нормальную ширину
-        let pipeGap = 150; // Вернул нормальный промежуток
-        let pipeSpeed = 2.5; // Увеличена скорость
-        let lastPipeTime = 0;
-        let clouds = [];
-        let gameStats = {
-            gamesPlayed: 0,
-            totalScore: 0,
-            bestScore: 0
+        // Каталог товаров
+        const catalog = {
+            "deodorant": {
+                "name": "Мужской дезодорант OldSpice",
+                "price": 450,
+                "emoji": "🧴",
+                "stock": 50
+            },
+            "detergent": {
+                "name": "Стиральный порошок 'Утенок'",
+                "price": 500,
+                "emoji": "🧽",
+                "stock": 30
+            },
+            "soy_sauce": {
+                "name": "Соевый соус SenSoy",
+                "price": 200,
+                "emoji": "🍶",
+                "stock": 100
+            },
+            "iphone_case": {
+                "name": "Чехол для айфона",
+                "price": 300,
+                "emoji": "📱",
+                "stock": 25
+            },
+            "spiderman_figure": {
+                "name": "Фигурка человека паука",
+                "price": 1000,
+                "emoji": "🕷️",
+                "stock": 15
+            }
         };
 
-        // Загрузка статистики из localStorage
-        if (localStorage.getItem('gameStats')) {
-            gameStats = JSON.parse(localStorage.getItem('gameStats'));
-        }
+        // Корзина
+        let cart = {};
 
-        bestScoreElement.textContent = bestScore;
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCart();
+            renderCatalog();
+            updateCartDisplay();
+        });
 
-        // Создание облаков
-        function createClouds() {
-            clouds = [];
-            for (let i = 0; i < 5; i++) {
-                clouds.push({
-                    x: Math.random() * canvas.width,
-                    y: Math.random() * 200 + 50,
-                    size: Math.random() * 30 + 20,
-                    speed: Math.random() * 0.5 + 0.2
-                });
+        // Загрузка корзины из localStorage
+        function loadCart() {
+            const savedCart = localStorage.getItem('baronshop_cart');
+            if (savedCart) {
+                cart = JSON.parse(savedCart);
             }
         }
 
-        function startGame() {
-            startScreen.style.display = 'none';
-            gameRunning = true;
-            score = 0;
-            bird.y = 300;
-            bird.velocity = 0;
-            bird.rotation = 0;
-            pipes = [];
-            createClouds();
-            scoreElement.textContent = '0';
-            gameLoop();
+        // Сохранение корзины в localStorage
+        function saveCart() {
+            localStorage.setItem('baronshop_cart', JSON.stringify(cart));
         }
 
-        function restartGame() {
-            gameOverScreen.style.display = 'none';
-            startGame();
-        }
+        // Отображение каталога
+        function renderCatalog() {
+            const catalogElement = document.getElementById('catalog');
+            catalogElement.innerHTML = '';
 
-        function gameOver() {
-            gameRunning = false;
-            gameStats.gamesPlayed++;
-            gameStats.totalScore += score;
-            
-            if (score > bestScore) {
-                bestScore = score;
-                gameStats.bestScore = bestScore;
-                localStorage.setItem('flappyBirdBestScore', bestScore);
-                bestScoreElement.textContent = bestScore;
-            }
-            
-            localStorage.setItem('gameStats', JSON.stringify(gameStats));
-            finalScoreElement.textContent = score;
-            finalBestScoreElement.textContent = bestScore;
-            gameOverScreen.style.display = 'block';
-            
-            try {
-                tg.sendData(JSON.stringify({
-                    action: 'game_result',
-                    score: score,
-                    best_score: bestScore,
-                    games_played: gameStats.gamesPlayed,
-                    total_score: gameStats.totalScore
-                }));
-            } catch (e) {
-                console.log('Ошибка отправки данных в бота:', e);
+            for (const [itemId, item] of Object.entries(catalog)) {
+                const productCard = document.createElement('div');
+                productCard.className = 'product-card';
+                
+                const isInStock = item.stock > 0;
+                const cartQuantity = cart[itemId] || 0;
+                
+                productCard.innerHTML = `
+                    <div class="product-emoji">${item.emoji}</div>
+                    <div class="product-name">${item.name}</div>
+                    <div class="product-price">${item.price} руб.</div>
+                    <div class="product-stock">В наличии: ${item.stock} шт.</div>
+                    <button class="add-to-cart-btn" ${!isInStock ? 'disabled' : ''} 
+                            onclick="addToCart('${itemId}')">
+                        ${!isInStock ? 'Нет в наличии' : 
+                          cartQuantity > 0 ? `В корзине: ${cartQuantity}` : 'Добавить в корзину'}
+                    </button>
+                `;
+                
+                catalogElement.appendChild(productCard);
             }
         }
 
-        function closeWebApp() {
-            try {
-                tg.close();
-            } catch (e) {
-                console.log('Ошибка закрытия Web App:', e);
-                tg.sendData(JSON.stringify({
-                    action: 'close_app'
-                }));
-            }
-        }
-
-        function jump() {
-            if (gameRunning) {
-                bird.velocity = bird.jumpPower;
-                bird.rotation = -0.4;
-            }
-        }
-
-        function createPipe() {
-            const gapY = Math.random() * (canvas.height - pipeGap - 120) + 60;
-            pipes.push({
-                x: canvas.width,
-                gapY: gapY,
-                passed: false,
-                topHeight: gapY,
-                bottomY: gapY + pipeGap
-            });
-        }
-
-        function updateBird() {
-            bird.velocity += bird.gravity;
-            bird.y += bird.velocity;
-            
-            // Плавный поворот птицы
-            if (bird.velocity > 0) {
-                bird.rotation = Math.min(bird.rotation + 0.12, 0.6);
+        // Добавление товара в корзину
+        function addToCart(itemId) {
+            if (cart[itemId]) {
+                cart[itemId]++;
             } else {
-                bird.rotation = Math.max(bird.rotation - 0.12, -0.4);
+                cart[itemId] = 1;
             }
             
-            if (bird.y < 0) bird.y = 0;
-            if (bird.y > canvas.height - bird.height) {
-                bird.y = canvas.height - bird.height;
-                gameOver();
-            }
+            saveCart();
+            renderCatalog();
+            updateCartDisplay();
         }
 
-        function updatePipes() {
-            for (let i = pipes.length - 1; i >= 0; i--) {
-                const pipe = pipes[i];
-                pipe.x -= pipeSpeed;
-                
-                if (pipe.x + pipeWidth < 0) {
-                    pipes.splice(i, 1);
-                }
-                
-                if (!pipe.passed && pipe.x + pipeWidth < bird.x) {
-                    pipe.passed = true;
-                    score++;
-                    scoreElement.textContent = score;
-                }
-            }
-        }
-
-        function updateClouds() {
-            for (let cloud of clouds) {
-                cloud.x -= cloud.speed;
-                if (cloud.x + cloud.size < 0) {
-                    cloud.x = canvas.width + cloud.size;
-                    cloud.y = Math.random() * 200 + 50;
-                }
-            }
-        }
-
-        function checkCollision() {
-            for (let pipe of pipes) {
-                if (bird.x + bird.width > pipe.x && bird.x < pipe.x + pipeWidth) {
-                    if (bird.y < pipe.topHeight || bird.y + bird.height > pipe.bottomY) {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-
-        function drawBackground() {
-            // Более голубое небо
-            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-            gradient.addColorStop(0, '#4A90E2');  // Более голубой
-            gradient.addColorStop(0.6, '#87CEEB'); // Голубой
-            gradient.addColorStop(0.8, '#98FB98'); // Светло-зеленый
-            gradient.addColorStop(1, '#90EE90');   // Зеленый
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-        }
-
-        function drawClouds() {
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-            for (let cloud of clouds) {
-                ctx.beginPath();
-                ctx.arc(cloud.x, cloud.y, cloud.size * 0.6, 0, Math.PI * 2);
-                ctx.arc(cloud.x + cloud.size * 0.4, cloud.y, cloud.size * 0.8, 0, Math.PI * 2);
-                ctx.arc(cloud.x + cloud.size * 0.8, cloud.y, cloud.size * 0.6, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        }
-
-        function drawBird() {
-            ctx.save();
-            ctx.translate(bird.x + bird.width/2, bird.y + bird.height/2);
-            ctx.rotate(bird.rotation);
-            
-            // Тело птицы (квадрат как в оригинале)
-            ctx.fillStyle = '#FFD700';
-            ctx.fillRect(-bird.width/2, -bird.height/2, bird.width, bird.height);
-            
-            // Крыло
-            ctx.fillStyle = '#FFA500';
-            ctx.fillRect(-bird.width/2 + 2, -bird.height/2 + 2, 8, 12);
-            
-            // Глаз
-            ctx.fillStyle = '#000';
-            ctx.beginPath();
-            ctx.arc(bird.width/2 - 5, -bird.height/2 + 5, 3, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // Блик в глазу
-            ctx.fillStyle = '#FFF';
-            ctx.beginPath();
-            ctx.arc(bird.width/2 - 4, -bird.height/2 + 4, 1, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // Простой клюв (треугольник)
-            ctx.fillStyle = '#FF6B35';
-            ctx.beginPath();
-            ctx.moveTo(bird.width/2, 0);
-            ctx.lineTo(bird.width/2 + 8, -3);
-            ctx.lineTo(bird.width/2 + 8, 3);
-            ctx.closePath();
-            ctx.fill();
-            
-            ctx.restore();
-        }
-
-        function drawPipes() {
-            for (let pipe of pipes) {
-                // Верхняя труба
-                const gradient1 = ctx.createLinearGradient(pipe.x, 0, pipe.x + pipeWidth, 0);
-                gradient1.addColorStop(0, '#228B22');
-                gradient1.addColorStop(1, '#32CD32');
-                ctx.fillStyle = gradient1;
-                ctx.fillRect(pipe.x, 0, pipeWidth, pipe.topHeight);
-                
-                // Нижняя труба
-                const gradient2 = ctx.createLinearGradient(pipe.x, pipe.bottomY, pipe.x + pipeWidth, pipe.bottomY);
-                gradient2.addColorStop(0, '#228B22');
-                gradient2.addColorStop(1, '#32CD32');
-                ctx.fillStyle = gradient2;
-                ctx.fillRect(pipe.x, pipe.bottomY, pipeWidth, canvas.height - pipe.bottomY);
-                
-                // Ободки труб (из того же материала)
-                ctx.fillStyle = '#228B22';
-                ctx.fillRect(pipe.x - 4, pipe.topHeight - 25, pipeWidth + 8, 25);
-                ctx.fillRect(pipe.x - 4, pipe.bottomY, pipeWidth + 8, 25);
-                
-                // Детали труб
-                ctx.strokeStyle = '#006400';
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.moveTo(pipe.x, 0);
-                ctx.lineTo(pipe.x, pipe.topHeight);
-                ctx.moveTo(pipe.x + pipeWidth, 0);
-                ctx.lineTo(pipe.x + pipeWidth, pipe.topHeight);
-                ctx.moveTo(pipe.x, pipe.bottomY);
-                ctx.lineTo(pipe.x, canvas.height);
-                ctx.moveTo(pipe.x + pipeWidth, pipe.bottomY);
-                ctx.lineTo(pipe.x + pipeWidth, canvas.height);
-                ctx.stroke();
-            }
-        }
-
-        function gameLoop() {
-            if (!gameRunning) return;
-            
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            drawBackground();
-            drawClouds();
-            updateClouds();
-            
-            updateBird();
-            updatePipes();
-            
-            if (Date.now() - lastPipeTime > 2000) { // Вернул нормальное время между трубами
-                createPipe();
-                lastPipeTime = Date.now();
+        // Удаление товара из корзины
+        function removeFromCart(itemId) {
+            if (cart[itemId] > 1) {
+                cart[itemId]--;
+            } else {
+                delete cart[itemId];
             }
             
-            if (checkCollision()) {
-                gameOver();
+            saveCart();
+            renderCatalog();
+            updateCartDisplay();
+        }
+
+        // Обновление отображения корзины
+        function updateCartDisplay() {
+            const cartSection = document.getElementById('cartSection');
+            const cartItems = document.getElementById('cartItems');
+            const cartTotal = document.getElementById('cartTotal');
+            
+            const cartItemIds = Object.keys(cart);
+            
+            if (cartItemIds.length === 0) {
+                cartSection.style.display = 'none';
                 return;
             }
             
-            drawPipes();
-            drawBird();
+            cartSection.style.display = 'block';
             
-            requestAnimationFrame(gameLoop);
+            let total = 0;
+            cartItems.innerHTML = '';
+            
+            for (const itemId of cartItemIds) {
+                const item = catalog[itemId];
+                const quantity = cart[itemId];
+                const itemTotal = quantity * item.price;
+                total += itemTotal;
+                
+                const cartItem = document.createElement('div');
+                cartItem.className = 'cart-item';
+                cartItem.innerHTML = `
+                    <div class="cart-item-info">
+                        <div class="cart-item-emoji">${item.emoji}</div>
+                        <div class="cart-item-details">
+                            <h4>${item.name}</h4>
+                            <p>${item.price} руб. за шт.</p>
+                        </div>
+                    </div>
+                    <div class="cart-item-controls">
+                        <button class="quantity-btn" onclick="removeFromCart('${itemId}')">-</button>
+                        <span class="quantity">${quantity}</span>
+                        <button class="quantity-btn" onclick="addToCart('${itemId}')">+</button>
+                    </div>
+                `;
+                
+                cartItems.appendChild(cartItem);
+            }
+            
+            cartTotal.textContent = `Итого: ${total} руб.`;
         }
 
-        // Обработчики событий
-        canvas.addEventListener('click', jump);
-        canvas.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            jump();
-        });
-        document.addEventListener('keydown', (e) => {
-            if (e.code === 'Space') {
-                e.preventDefault();
-                jump();
+        // Оформление заказа
+        function checkout() {
+            if (Object.keys(cart).length === 0) {
+                alert('Корзина пуста!');
+                return;
             }
-        });
-
-        // Автоматический старт игры
-        setTimeout(() => {
-            if (!gameRunning) {
-                startGame();
+            
+            let orderText = 'Ваш заказ:\n\n';
+            let total = 0;
+            
+            for (const [itemId, quantity] of Object.entries(cart)) {
+                const item = catalog[itemId];
+                const itemTotal = quantity * item.price;
+                total += itemTotal;
+                orderText += `${item.emoji} ${item.name}\n`;
+                orderText += `Количество: ${quantity} шт.\n`;
+                orderText += `Цена: ${item.price} руб. × ${quantity} = ${itemTotal} руб.\n\n`;
             }
-        }, 1000);
+            
+            orderText += `💰 Итого: ${total} руб.\n\n`;
+            orderText += 'Для оформления заказа свяжитесь с нами:\n';
+            orderText += 'Telegram: @baronshop_support\n';
+            orderText += 'Телефон: +7 (XXX) XXX-XX-XX';
+            
+            alert(orderText);
+            
+            // Очищаем корзину
+            cart = {};
+            saveCart();
+            renderCatalog();
+            updateCartDisplay();
+        }
     </script>
 </body>
-</html> 
+</html>
