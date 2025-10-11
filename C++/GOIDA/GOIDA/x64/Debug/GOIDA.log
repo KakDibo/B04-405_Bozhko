@@ -1,0 +1,5 @@
+﻿  GGOIDA.cpp
+C:\Users\Макар\Информатика\1 сем\C++\GOIDA\GOIDA\GGOIDA.cpp(10,17): error C2086: long double c: переопределение
+      C:\Users\Макар\Информатика\1 сем\C++\GOIDA\GOIDA\GGOIDA.cpp(6,20):
+       см. объявление "c"
+  
